@@ -105,7 +105,22 @@ async function main() {
     }
   }, POLL_INTERVAL_MS);
 
-  console.log('[main] حالت تست آغاز شد (بدون MongoDB). هر', POLL_INTERVAL_MS, 'میلی‌ثانیه بررسی می‌شود.');
+  // هر ۱۵ ثانیه صفحه را رفرش می‌کند، برای مواقعی که محتوای جدید
+  // (مثل پیام‌های چت) بدون رفرش در DOM به‌روزرسانی نمی‌شود.
+  const REFRESH_INTERVAL_MS = parseInt(process.env.REFRESH_INTERVAL_MS || '15000', 10);
+  setInterval(async () => {
+    if (page && !page.isClosed()) {
+      try {
+        console.log('[refresh] در حال رفرش صفحه...');
+        await page.reload({ waitUntil: 'networkidle2', timeout: 60000 });
+        console.log('[refresh] صفحه رفرش شد.');
+      } catch (err) {
+        console.error('[refresh] خطا در رفرش صفحه:', err.message);
+      }
+    }
+  }, REFRESH_INTERVAL_MS);
+
+  console.log('[main] حالت تست آغاز شد (بدون MongoDB). هر', POLL_INTERVAL_MS, 'میلی‌ثانیه بررسی و هر', REFRESH_INTERVAL_MS, 'میلی‌ثانیه رفرش می‌شود.');
 }
 
 main().catch((err) => {
